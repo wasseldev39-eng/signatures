@@ -1,87 +1,63 @@
-<script>
-// --- هام جداً: ضع رابط الـ Web App الخاص بك هنا بعد عمل Deploy ---
-const SCRIPT_URL = "https://script.google.com/macros/s/XXXXX/exec"; 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام التوقيع الرقمي </title>
+    <style>
+        /* إعدادات الصفحة الأساسية لمنع التمرير وتغطية الشاشة */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+            font-family: sans-serif;
+        }
 
-const states = ["39-الوادي", "01-أدرار", "02-الشلف", "03-الأغواط", "04-أم البواقي", "05-باتنة", "06-بجاية", "07-بسكرة", "08-بشار", "09-البليدة", "10-البويرة", "11-تمنراست", "12-تبسة", "13-تلمسان", "14-تيارت", "15-تيزي وزو", "16-الجزائر", "17-الجلفة", "18-جيجل", "19-سطيف", "20-سعيدة", "21-سكيكدة", "22-سيدي بلعباس", "23-عنابة", "24-قالمة", "25-قسنطينة", "26-المدية", "27-مستغانم", "28-المسيلة", "29-معسكر", "30-ورقلة", "31-وهران", "32-البيض", "33-إليزي", "34-برج بوعريريج", "35-بومرداس", "36-الطارف", "37-تندوف", "38-تيسمسيلت", "40-خنشلة", "41-سوق أهراس", "42-تيبازة", "43-ميلة", "44-عين الدفلى", "45-النعامة", "46-عين تموشنت", "47-غرداية", "48-غليزان", "49-تيميمون", "50-برج باجي مختار", "51-أولاد جلال", "52-بني عباس", "53-عين صالح", "54-عين قزام", "55-تقرت", "56-جانت", "57-المغير", "58-المنيعة"];
-const stSel = document.getElementById('stSelect');
-states.forEach(s => { let o = document.createElement('option'); o.text=s; o.value=s; stSel.add(o); });
+        /* حاوية الإطار لضمان التنسيق */
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
 
-// نصوص العقود (ضع نصوصك هنا)
-const contracts = { 'تاجر': `...`, 'موزع': `...` };
+        /* تنسيق الإطار (Iframe) ليملأ الحاوية */
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            /* تحسين استجابة اللمس على الهواتف */
+            touch-action: none; 
+        }
 
-function setMode(t){
-    document.getElementById('userType').value=t;
-    document.getElementById('t-dist').className=(t==='موزع'?'tab active':'tab');
-    document.getElementById('t-merch').className=(t==='تاجر'?'tab active':'tab');
-}
+        /* رسالة تحميل بسيطة تظهر خلف السكريبت */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #6a1b9a;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
 
-function openTerms() {
-    let t = document.getElementById('userType').value;
-    document.getElementById('termsTitle').innerText = "عقد الانضمام الرسمي بصفة: " + t;
-    document.getElementById('termsBody').innerHTML = contracts[t];
-    document.getElementById('termsModal').style.display = 'flex';
-}
-function closeTerms() { document.getElementById('termsModal').style.display = 'none'; }
-function closeSuccess() { document.getElementById('successModal').style.display = 'none'; }
+    <div class="container">
+        <div class="loading">جاري تحميل نظام التوقيع...</div>
+        
+        <iframe 
+            src="https://script.google.com/macros/s/AKfycbywgNlocVmrtJog7qEtOCp3IhbF-oWclUFeQmbyOQORFZ_iEazX8IVrwf9xctM1q41E/exec" 
+            allowfullscreen="true"
+            allow="geolocation; microphone; camera; display-capture"
+            title="Signature System">
+        </iframe>
+    </div>
 
-document.getElementById('wasselForm').onsubmit = async function(e){
-    e.preventDefault();
-    if(!document.getElementById('agreeCheck').checked) {
-        alert("يجب عليك قراءة بنود العقد والموافقة عليها أولاً.");
-        return;
-    }
-    
-    const btn = document.getElementById('subBtn');
-    btn.disabled = true; btn.innerText = "جاري معالجة طلبك سحابياً...";
-    
-    // تحويل الصور
-    const idPhotoB64 = await toB64(document.getElementById('img1').files[0]);
-    const workFile = document.getElementById('img2').files[0];
-    const workPhotoB64 = workFile ? await toB64(workFile) : null;
-
-    const data = {
-        userType: document.getElementById('userType').value,
-        fullName: this.fullName.value,
-        email: this.email.value,
-        phone: this.phone.value,
-        dob: this.dob.value,
-        state: this.state.value,
-        city: this.city.value,
-        zipCode: this.zipCode.value,
-        idNumber: this.idNumber.value,
-        workNumber: this.workNumber.value,
-        idPhoto: idPhotoB64,
-        workPhoto: workPhotoB64
-    };
-
-    // الإرسال إلى جوجل عبر Fetch API
-    fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors", // هذا ضروري لتجنب مشاكل CORS مع جوجل
-        body: JSON.stringify(data)
-    }).then(() => {
-        // بما أن جوجل لا تعيد JSON بسهولة في وضع no-cors، سنفترض النجاح إذا لم يحدث خطأ
-        document.getElementById('finalRegNum').innerText = "تم الاستلام";
-        document.getElementById('successModal').style.display = 'flex';
-        document.getElementById('wasselForm').reset();
-    }).catch(err => {
-        alert("حدث خطأ في الاتصال.");
-    }).finally(() => {
-        btn.disabled = false; btn.innerText = "إرسال الطلب والموافقة";
-    });
-};
-
-const toB64 = f => new Promise((res) => {
-    const rd = new FileReader();
-    rd.readAsDataURL(f);
-    rd.onload = () => res(rd.result);
-});
-
-function copyReg() {
-    navigator.clipboard.writeText(document.getElementById('finalRegNum').innerText);
-    const t = document.getElementById("toast");
-    t.innerText = "✅ تم نسخ الرمز! احتفظ به جيداً.";
-    t.className = "show";
-    setTimeout(() => t.className = "", 3500);
-}
-</script>
+</body>
+</html>
